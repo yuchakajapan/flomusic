@@ -8,7 +8,7 @@ SITE = "https://flomusic.forworld.workers.dev"
 
 AUTHOR   = "yuchaka"
 AUTHOR_X = "https://x.com/GekidanYutaka"
-REPO     = "https://github.com/bm0903882-svg/flomusic"
+REPO     = "https://github.com/yuchakajapan/flomusic"
 
 # 更新履歴。新しいものを先頭に足していく（日付は実際に公開した日）
 CHANGELOG = [
