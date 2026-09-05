@@ -86,7 +86,12 @@ def build_page(p):
 <meta property="og:description" content="{p["desc"]}">
 <meta property="og:url" content="{canon}">
 <meta property="og:locale" content="ja_JP">
+<meta property="og:image" content="{SITE}/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="flomusic — 「ここから」の音を、手に入れる。">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{SITE}/og.png">
 <link rel="icon" href="{FAVICON}">
 <link rel="stylesheet" href="{depth_prefix}app.css">
 </head>

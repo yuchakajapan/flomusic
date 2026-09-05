@@ -13,6 +13,7 @@ REPO     = "https://github.com/yuchakajapan/flomusic"
 # 更新履歴。新しいものを先頭に足していく（日付は実際に公開した日）
 CHANGELOG = [
     ("2026-09-06", [
+        "SNS共有用のOG画像を追加",
         "ソースコードをGitHubで公開",
         "運営者情報と更新履歴を掲載",
         "書き出しの既定をMP3に変更。各候補からMP3/WAVを直接選べるように",
