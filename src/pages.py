@@ -8,10 +8,14 @@ SITE = "https://flomusic.forworld.workers.dev"
 
 AUTHOR   = "yuchaka"
 AUTHOR_X = "https://x.com/GekidanYutaka"
+REPO     = "https://github.com/bm0903882-svg/flomusic"
 
 # 更新履歴。新しいものを先頭に足していく（日付は実際に公開した日）
 CHANGELOG = [
     ("2026-09-06", [
+        "ソースコードをGitHubで公開",
+        "運営者情報と更新履歴を掲載",
+        "書き出しの既定をMP3に変更。各候補からMP3/WAVを直接選べるように",
         "ループ作成機能を追加（継ぎ目のない繰り返し区間を自動検出）",
         "波形をドラッグして開始・終了を手で調整できるように（拍・小節頭にスナップ）",
         "MP3での書き出しに対応（128 / 192 / 320kbps）",
@@ -44,6 +48,10 @@ COMMON_FOOTER = """
       なお、訪問数の把握のために Cloudflare Web Analytics を使用しています。
       これはCookieを使わず、個人を特定しません。記録されるのはページの表示回数や参照元といった統計情報だけで、
       あなたが読み込んだ音源やその内容は一切送信されません。
+      <br>
+      この主張は、口約束ではなく<b>コードで確認できます</b>。
+      flomusic のソースコードはすべて公開しています。
+      <a href="__REPO__" target="_blank" rel="noopener">GitHubでソースコードを見る</a>
     </p>
     <h2>商用利用について</h2>
     <p>
@@ -261,4 +269,5 @@ COMMON_FOOTER = (COMMON_FOOTER
     .replace("__AUTHOR__", AUTHOR)
     .replace("__AUTHOR_X_LABEL__", "@" + AUTHOR_X.rsplit("/", 1)[-1])
     .replace("__AUTHOR_X__", AUTHOR_X)
+    .replace("__REPO__", REPO)
     .replace("__CHANGELOG__", _changelog_html()))
