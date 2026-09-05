@@ -1,0 +1,7 @@
+# flomusic — Cloudflare Workers (静的アセットのみ)
+# 更新: npx wrangler deploy
+name = "flomusic"
+compatibility_date = "2026-08-29"
+
+[assets]
+directory = "./public"

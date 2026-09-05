@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>曲のサビを自動で抽出・切り出し｜サビだけ取り出す無料ツール - flomusic</title>
+<meta name="description" content="曲を解析して盛り上がりの起点やドロップを自動検出し、サビから始まる音源を切り出します。拍に合わせて切るので頭が不自然になりません。ブラウザだけで完結、アップロード不要・無料。">
+<meta name="google-site-verification" content="EapIR4ipt7l7WvDK_Dp0mbCz6Tf-pbk0gHt6HwcwfhI">
+<meta name="theme-color" content="#0f1116">
+<link rel="canonical" href="https://flomusic.forworld.workers.dev/sabi/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="flomusic">
+<meta property="og:title" content="曲のサビを自動で抽出・切り出し｜サビだけ取り出す無料ツール - flomusic">
+<meta property="og:description" content="曲を解析して盛り上がりの起点やドロップを自動検出し、サビから始まる音源を切り出します。拍に合わせて切るので頭が不自然になりません。ブラウザだけで完結、アップロード不要・無料。">
+<meta property="og:url" content="https://flomusic.forworld.workers.dev/sabi/">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f1116'/%3E%3Cg fill='%235b8cff'%3E%3Crect x='5' y='14' width='3' height='4' rx='1.5'/%3E%3Crect x='10' y='11' width='3' height='10' rx='1.5'/%3E%3C/g%3E%3Cg fill='%23ff7a59'%3E%3Crect x='15' y='6' width='3' height='20' rx='1.5'/%3E%3Crect x='20' y='10' width='3' height='12' rx='1.5'/%3E%3Crect x='25' y='13' width='3' height='6' rx='1.5'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="sitenav"><a href="/">トップ</a><a href="/loop/">ループBGM作成</a><a href="/sabi/" class="on">サビ抽出</a><a href="/cut/">曲カット・尺合わせ</a></nav>
+
+  <h1 class="pagetitle">曲のサビを抽出する</h1>
+  <p class="tagline">一番盛り上がる場所を自動で見つけて、そこから切り出します。</p>
+  <div class="badges">
+    <span class="privacy">🔒 音源はあなたのブラウザの中だけで処理されます。どこにもアップロードされません</span>
+    <span class="privacy alt">✓ 商用利用OK・登録不要・完全無料</span>
+  </div>
+  <p class="sub">曲をドロップすると、盛り上がりが始まる位置・音圧が一気に立ち上がる位置・展開が切り替わる位置を検出して印を付けます。サビ候補には🔥が付くので、そこから15秒・30秒・60秒などで切り出せます。</p>
+
+  <div class="steps"><div class="step"><b>1</b><span>曲をドロップする</span></div><div class="step"><b>2</b><span>🔥が付いた候補がサビの可能性が高い</span></div><div class="step"><b>3</b><span>長さを選んで書き出す</span></div></div>
+
+  <div id="drop">
+    <div class="big">音楽ファイルをドロップ / クリックで選択</div>
+    <div class="small">MP3 / WAV / M4A / OGG / FLAC</div>
+    <input type="file" id="file" accept="audio/*" class="hidden">
+  </div>
+  <div id="err" class="err"></div>
+
+  <div id="prog" class="panel">
+    <div class="bar"><div id="progBar"></div></div>
+    <div id="progTxt">解析中…</div>
+  </div>
+
+  <div id="main" class="hidden">
+    <div class="panel">
+      <div class="meta">
+        <span>ファイル <b id="mName">-</b></span>
+        <span>長さ <b id="mDur">-</b></span>
+        <span>推定BPM <b id="mBpm">-</b></span>
+        <span><span id="mCntLabel">検出点</span> <b id="mCnt">-</b></span>
+      </div>
+      <canvas id="wave"></canvas>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" data-mode="cut">アタマ出し</button>
+      <button class="tab" data-mode="loop">ループ作成</button>
+    </div>
+
+    <div class="panel" id="cutPanel">
+      <div class="row">
+        <div class="fld">
+          <label>切り出す長さ</label>
+          <div class="seg" id="segLen">
+            <button data-len="15">15秒</button>
+            <button data-len="30" class="on">30秒</button>
+            <button data-len="60">60秒</button>
+            <button data-len="0">最後まで</button>
+            <button data-len="-1">カスタム</button>
+          </div>
+        </div>
+        <div class="fld hidden" id="customWrap">
+          <label>秒数</label>
+          <input type="number" id="customLen" value="45" min="1" max="600">
+        </div>
+        <div class="fld">
+          <label>パターン数</label>
+          <input type="number" id="count" value="8" min="2" max="20">
+        </div>
+        <div class="fld">
+          <label>フェードアウト（秒）</label>
+          <input type="number" id="fadeOut" value="0.8" min="0" max="10" step="0.1">
+        </div>
+        <label class="chk"><input type="checkbox" id="snap" checked>開始点を小節・拍に合わせる</label>
+        <button class="btn" id="redo">再解析</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="loopPanel">
+      <div class="row">
+        <div class="fld">
+          <label>ループの長さ</label>
+          <div class="seg" id="segBars">
+            <button data-bars="4">4小節</button>
+            <button data-bars="8" class="on">8小節</button>
+            <button data-bars="16">16小節</button>
+            <button data-bars="0">おまかせ</button>
+          </div>
+        </div>
+        <div class="fld">
+          <label>候補の数</label>
+          <input type="number" id="loopCount" value="6" min="2" max="20">
+        </div>
+        <div class="fld">
+          <label>書き出し</label>
+          <div class="seg" id="segRepeat">
+            <button data-rep="1" class="on">1周だけ</button>
+            <button data-rep="0">秒数を指定</button>
+          </div>
+        </div>
+        <div class="fld hidden" id="repeatWrap">
+          <label>秒数</label>
+          <input type="number" id="repeatSec" value="60" min="5" max="900">
+        </div>
+        <label class="chk"><input type="checkbox" id="xfade" checked>継ぎ目をなめらかにする</label>
+      </div>
+      <div class="note info">
+        曲の中から「一周して戻っても違和感がない区間」を探します。小節数で長さを固定しているので、繰り返しても拍が崩れません。
+      </div>
+    </div>
+
+    <div class="panel" id="dirPanel">
+      <div class="row">
+        <div class="fld">
+          <label>まとめてダウンロードする形式</label>
+          <div class="seg" id="segFmt">
+            <button data-fmt="mp3" class="on">MP3</button>
+            <button data-fmt="wav">WAV（無劣化）</button>
+          </div>
+        </div>
+        <div class="fld" id="kbpsWrap">
+          <label>MP3の音質</label>
+          <div class="seg" id="segKbps">
+            <button data-kbps="320">320kbps</button>
+            <button data-kbps="192" class="on">192kbps</button>
+            <button data-kbps="128">128kbps</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider hidden" id="dirDivider"></div>
+      <div class="row" id="dirRow">
+        <div class="fld">
+          <label>保存先フォルダ</label>
+          <div class="dirline">
+            <button class="btn ghost" id="pickDir">フォルダを選ぶ</button>
+            <button class="btn ghost hidden" id="clearDir">解除</button>
+            <span id="dirName" class="hint">ブラウザの既定のダウンロードフォルダ</span>
+          </div>
+        </div>
+        <label class="chk"><input type="checkbox" id="subdir" checked>曲名のフォルダを作る</label>
+      </div>
+      <div id="dirNote" class="note hidden"></div>
+    </div>
+
+    <div class="panel" id="loopResults" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th style="width:150px">ループ区間</th>
+            <th>長さ</th>
+            <th style="width:100px">継ぎ目の自然さ</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="loopRows"></tbody>
+      </table>
+      <div class="foot">
+        <span class="hint">▶ は実際にループ再生します。波形の両端をドラッグすれば長さも位置も手で調整できます。</span>
+        <button class="btn" id="dlAllLoops">全部まとめてダウンロード</button>
+      </div>
+    </div>
+
+    <div class="panel" id="cutResults">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th style="width:110px">開始</th>
+            <th>種類</th>
+            <th style="width:100px">おすすめ度</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="foot">
+        <span class="hint">▶ で試聴、⬇ でWAV保存。波形の数字をクリックしても試聴できます。</span>
+        <button class="btn" id="dlAll">全部まとめてダウンロード</button>
+      </div>
+      <div class="legend">
+        <span><span class="tag t-drop">ドロップ</span>音圧が一気に立ち上がる</span>
+        <span><span class="tag t-rise">盛り上がり開始</span>じわじわ上がり始める</span>
+        <span><span class="tag t-switch">展開の切り替わり</span>曲の構成が変わる</span>
+        <span><span class="fire">🔥</span> 開始直後のエネルギーが高い</span>
+      </div>
+    </div>
+  </div>
+
+
+  <footer>
+
+    <h2>「サビ」を機械はどう探しているか</h2>
+    <p>
+      サビには共通する特徴があります。音量が大きい、低音が厚い、その直前で一度ためを作る、
+      そして曲の中で複数回くり返される。flomusic はこれらを別々に測っています。
+    </p>
+    <p>
+      音量が数秒かけて上がっていく箇所は<b>盛り上がり開始</b>、急に跳ね上がる箇所は<b>ドロップ</b>、
+      和音や音色の傾向がガラッと変わる箇所は<b>展開の切り替わり</b>として分類します。
+      さらに、切り出した直後のエネルギーが高いものには🔥を付けています。
+      <b>サビを狙うなら、🔥が付いた候補から聴くのが近道です。</b>
+    </p>
+    <h2>頭が不自然にならない理由</h2>
+    <p>
+      秒数だけで機械的に切ると、たいてい拍の途中から始まってしまい、聴いた瞬間に気持ち悪さが出ます。
+      flomusic はテンポと小節頭を推定して、切り出し位置を<b>拍・小節の頭に吸着</b>させています。
+      そのまま動画に置いても、頭が転ばずに鳴りはじめます。
+    </p>
+    <h2>検出がずれていたら手で直せます</h2>
+    <p>
+      サビの入りは曲によって癖があるので、自動検出が1拍ずれることもあります。
+      その場合は波形の端をドラッグして調整してください。拍に吸着しながら動くので、耳で合わせるだけで済みます。
+      Shiftを押しながらドラッグすれば吸着なしで細かく詰められます。
+    </p>
+    <h2>ショート動画のBGMに</h2>
+    <p>
+      縦型ショートは最初の1秒で見られるかが決まります。イントロから使うと、その勝負どころが
+      静かなパッドの音で消えます。サビ頭から始めれば、開始と同時に一番強い部分が鳴ります。
+      15秒・30秒・60秒のプリセットを用意しているのはこのためです。
+    </p>
+
+
+    <h2>安全性について</h2>
+    <p>
+      音声の解析も書き出しも、すべてあなたのブラウザの中で完結します。
+      <b>曲がサーバーに送られることは一切ありません。</b>アカウント登録も不要で、
+      読み込んだ音源はページを閉じた時点で消えます。
+      <br>
+      なお、訪問数の把握のために Cloudflare Web Analytics を使用しています。
+      これはCookieを使わず、個人を特定しません。記録されるのはページの表示回数や参照元といった統計情報だけで、
+      あなたが読み込んだ音源やその内容は一切送信されません。
+    </p>
+    <h2>商用利用について</h2>
+    <p>
+      <b style="color:var(--ok)">書き出した音源は商用利用できます。</b>
+      YouTube・広告・クライアントワーク・販売物など、用途の制限はありません。
+      クレジット表記も不要です。flomusic側が利用料や権利を主張することは一切ありません。
+      <br>
+      ただし、<b>元の楽曲の権利は元の権利者にあります</b>。ご自身が権利を持つ音源、
+      または利用許諾を得た音源でお使いください。切り出しても原曲の著作権は消えません。
+    </p>
+    <h2>対応形式</h2>
+    <p>
+      読み込みは MP3 / WAV / M4A / OGG / FLAC など、お使いのブラウザが再生できる音声ファイル。
+      書き出しは <b>WAV（無劣化）</b>と <b>MP3（128 / 192 / 320kbps）</b>から選べます。
+      DRMで保護された曲は読み込めません。
+    </p>
+    <p style="font-size:11px;opacity:.75">
+      MP3エンコードに <a href="https://github.com/zhuker/lamejs" style="color:var(--muted)">lamejs</a>（LGPL-3.0）を使用しています。
+    </p>
+
+    <h2>運営者・お問い合わせ</h2>
+    <p>
+      flomusic は <b>yuchaka</b> が個人で開発・運営しています。
+      不具合の報告、うまく検出できなかった曲の傾向、こんな機能がほしいといった要望は、
+      X（旧Twitter）までお気軽にどうぞ。返信します。
+      <br>
+      <a href="https://x.com/GekidanYutaka" target="_blank" rel="noopener">@GekidanYutaka</a>
+    </p>
+
+    <h2>更新履歴</h2>
+    <div class="changelog"><div class="chg"><b>2026-09-06</b><ul><li>ループ作成機能を追加（継ぎ目のない繰り返し区間を自動検出）</li><li>波形をドラッグして開始・終了を手で調整できるように（拍・小節頭にスナップ）</li><li>MP3での書き出しに対応（128 / 192 / 320kbps）</li><li>用途別にページを分割</li></ul></div><div class="chg"><b>2026-08-29</b><ul><li>書き出し先のフォルダを指定できるように（Chrome / Edge）</li></ul></div><div class="chg"><b>2026-08-28</b><ul><li>公開開始。盛り上がりの起点を自動検出してWAVで書き出す機能</li></ul></div></div>
+
+  </footer>
+
+  <div class="related"><h2>ほかのツール</h2><div class="relgrid"><a class="relcard" href="/"><b>トップ</b><span><b>from</b> + <b>music</b> — 「ここから」の音を、手に入れる。</span></a><a class="relcard" href="/loop/"><b>ループBGM作成</b><span>曲の中から、継ぎ目のわからない繰り返し区間を自動で探します。</span></a><a class="relcard" href="/cut/"><b>曲カット・尺合わせ</b><span>拍に合わせて切るので、頭もお尻も不自然になりません。</span></a></div></div>
+
+</div>
+
+<script>window.FLOMUSIC_PAGE = { mode: "cut" };</script>
+<script src="/lame.min.js"></script>
+<script src="/app.js"></script>
+
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon='{"token": "1f2f47e1a4154b53a8d1f38f8151b5d8"}'></script>
+</body>
+</html>

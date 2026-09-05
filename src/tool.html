@@ -1,0 +1,168 @@
+  <div id="drop">
+    <div class="big">音楽ファイルをドロップ / クリックで選択</div>
+    <div class="small">MP3 / WAV / M4A / OGG / FLAC</div>
+    <input type="file" id="file" accept="audio/*" class="hidden">
+  </div>
+  <div id="err" class="err"></div>
+
+  <div id="prog" class="panel">
+    <div class="bar"><div id="progBar"></div></div>
+    <div id="progTxt">解析中…</div>
+  </div>
+
+  <div id="main" class="hidden">
+    <div class="panel">
+      <div class="meta">
+        <span>ファイル <b id="mName">-</b></span>
+        <span>長さ <b id="mDur">-</b></span>
+        <span>推定BPM <b id="mBpm">-</b></span>
+        <span><span id="mCntLabel">検出点</span> <b id="mCnt">-</b></span>
+      </div>
+      <canvas id="wave"></canvas>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" data-mode="cut">アタマ出し</button>
+      <button class="tab" data-mode="loop">ループ作成</button>
+    </div>
+
+    <div class="panel" id="cutPanel">
+      <div class="row">
+        <div class="fld">
+          <label>切り出す長さ</label>
+          <div class="seg" id="segLen">
+            <button data-len="15">15秒</button>
+            <button data-len="30" class="on">30秒</button>
+            <button data-len="60">60秒</button>
+            <button data-len="0">最後まで</button>
+            <button data-len="-1">カスタム</button>
+          </div>
+        </div>
+        <div class="fld hidden" id="customWrap">
+          <label>秒数</label>
+          <input type="number" id="customLen" value="45" min="1" max="600">
+        </div>
+        <div class="fld">
+          <label>パターン数</label>
+          <input type="number" id="count" value="8" min="2" max="20">
+        </div>
+        <div class="fld">
+          <label>フェードアウト（秒）</label>
+          <input type="number" id="fadeOut" value="0.8" min="0" max="10" step="0.1">
+        </div>
+        <label class="chk"><input type="checkbox" id="snap" checked>開始点を小節・拍に合わせる</label>
+        <button class="btn" id="redo">再解析</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="loopPanel">
+      <div class="row">
+        <div class="fld">
+          <label>ループの長さ</label>
+          <div class="seg" id="segBars">
+            <button data-bars="4">4小節</button>
+            <button data-bars="8" class="on">8小節</button>
+            <button data-bars="16">16小節</button>
+            <button data-bars="0">おまかせ</button>
+          </div>
+        </div>
+        <div class="fld">
+          <label>候補の数</label>
+          <input type="number" id="loopCount" value="6" min="2" max="20">
+        </div>
+        <div class="fld">
+          <label>書き出し</label>
+          <div class="seg" id="segRepeat">
+            <button data-rep="1" class="on">1周だけ</button>
+            <button data-rep="0">秒数を指定</button>
+          </div>
+        </div>
+        <div class="fld hidden" id="repeatWrap">
+          <label>秒数</label>
+          <input type="number" id="repeatSec" value="60" min="5" max="900">
+        </div>
+        <label class="chk"><input type="checkbox" id="xfade" checked>継ぎ目をなめらかにする</label>
+      </div>
+      <div class="note info">
+        曲の中から「一周して戻っても違和感がない区間」を探します。小節数で長さを固定しているので、繰り返しても拍が崩れません。
+      </div>
+    </div>
+
+    <div class="panel" id="dirPanel">
+      <div class="row">
+        <div class="fld">
+          <label>まとめてダウンロードする形式</label>
+          <div class="seg" id="segFmt">
+            <button data-fmt="mp3" class="on">MP3</button>
+            <button data-fmt="wav">WAV（無劣化）</button>
+          </div>
+        </div>
+        <div class="fld" id="kbpsWrap">
+          <label>MP3の音質</label>
+          <div class="seg" id="segKbps">
+            <button data-kbps="320">320kbps</button>
+            <button data-kbps="192" class="on">192kbps</button>
+            <button data-kbps="128">128kbps</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider hidden" id="dirDivider"></div>
+      <div class="row" id="dirRow">
+        <div class="fld">
+          <label>保存先フォルダ</label>
+          <div class="dirline">
+            <button class="btn ghost" id="pickDir">フォルダを選ぶ</button>
+            <button class="btn ghost hidden" id="clearDir">解除</button>
+            <span id="dirName" class="hint">ブラウザの既定のダウンロードフォルダ</span>
+          </div>
+        </div>
+        <label class="chk"><input type="checkbox" id="subdir" checked>曲名のフォルダを作る</label>
+      </div>
+      <div id="dirNote" class="note hidden"></div>
+    </div>
+
+    <div class="panel" id="loopResults" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th style="width:150px">ループ区間</th>
+            <th>長さ</th>
+            <th style="width:100px">継ぎ目の自然さ</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="loopRows"></tbody>
+      </table>
+      <div class="foot">
+        <span class="hint">▶ は実際にループ再生します。波形の両端をドラッグすれば長さも位置も手で調整できます。</span>
+        <button class="btn" id="dlAllLoops">全部まとめてダウンロード</button>
+      </div>
+    </div>
+
+    <div class="panel" id="cutResults">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th style="width:110px">開始</th>
+            <th>種類</th>
+            <th style="width:100px">おすすめ度</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="foot">
+        <span class="hint">▶ で試聴、⬇ でWAV保存。波形の数字をクリックしても試聴できます。</span>
+        <button class="btn" id="dlAll">全部まとめてダウンロード</button>
+      </div>
+      <div class="legend">
+        <span><span class="tag t-drop">ドロップ</span>音圧が一気に立ち上がる</span>
+        <span><span class="tag t-rise">盛り上がり開始</span>じわじわ上がり始める</span>
+        <span><span class="tag t-switch">展開の切り替わり</span>曲の構成が変わる</span>
+        <span><span class="fire">🔥</span> 開始直後のエネルギーが高い</span>
+      </div>
+    </div>
+  </div>
